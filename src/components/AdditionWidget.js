@@ -25,7 +25,7 @@ function AdditionWidget(props) {
 
     return (
         <div>
-            <h1>Addition Widget</h1>
+            <h4>Addition Widget</h4>
 
             <input
                 type="number"
@@ -33,19 +33,19 @@ function AdditionWidget(props) {
                 onChange={handleNumber1Change}
                 placeholder="Enter first number"
             />
-
+            <br />
             <input
                 type="number"
                 value={number2}
                 onChange={handleNumber2Change}
                 placeholder="Enter second number"
             />
-
+            <br />
             <button onClick={calculateSum}>Calculate Sum</button>
 
             {sum !== null && (
                 <div>
-                    <h2>Sum: {sum}</h2>
+                    <h4>Sum: {sum}</h4>
                 </div>
             )}
         </div>
