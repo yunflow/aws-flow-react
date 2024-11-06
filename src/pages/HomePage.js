@@ -1,22 +1,25 @@
 import AdditionWidget from "../components/AdditionWidget";
+import { Link } from "@mui/material";
 
 function HomePage() {
     return (
         <div id="HomePage">
-            <iframe
-                src="/webgl/index.html"
-                width="100%"
-                height="100%"
-            ></iframe>
-
             <header>
                 <h3>
+                    Hello, this is Yunflow <br />
                     还不知道这个网站可以做什么，先放个加法在这里👇
                 </h3>
             </header>
 
-            <br />
+            <br /><br /><br />
+
             <AdditionWidget />
+
+            <br /><br />
+
+            <Link href="/ar-test" variant="body2">
+                WebGL AR Test
+            </Link>
         </div>
     );
 }
