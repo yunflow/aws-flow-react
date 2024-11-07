@@ -30,18 +30,5 @@ html {
   max-width: 600px; /* 最大宽度，可以根据实际需要调整 */
   margin: auto; /* 水平居中显示 */
   position: relative; /* 相对定位 */
-  background-color: black; /* 背景色设置为黑色 */
-}
-
-/* 确保容器保持 9:18 的比例 */
-@media (orientation: portrait) {
-  #unity-container {
-      padding-top: calc(200% / 9); /* 18/9 的比例 */
-  }
-}
-
-@media (orientation: landscape) {
-  #unity-container {
-      padding-top: calc(100% / 18 * 9); /* 保持 9:18 的比例 */
-  }
+  background-color: white;
 }

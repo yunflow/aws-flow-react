@@ -1,12 +1,12 @@
 import React from "react";
 import { Unity, useUnityContext } from "react-unity-webgl";
 
-const UnityViewer = () => {
+function UnityViewer({ folder, project }) {
     const { unityProvider, loadingProgression, isLoaded } = useUnityContext({
-        loaderUrl: "webgl/Build/crowdrunner.loader.js",
-        dataUrl: "webgl/Build/crowdrunner.data",
-        frameworkUrl: "webgl/Build/crowdrunner.framework.js",
-        codeUrl: "webgl/Build/crowdrunner.wasm",
+        loaderUrl: folder + "/Build/" + project + ".loader.js",
+        dataUrl: folder + "/Build/" + project + ".data",
+        frameworkUrl: folder + "/Build/" + project + ".framework.js",
+        codeUrl: folder + "/Build/" + project + ".wasm",
     });
 
     return (

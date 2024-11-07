@@ -12,13 +12,16 @@ function HomePage() {
             </header>
 
             <br /><br /><br />
-
             <AdditionWidget />
 
             <br /><br />
+            <Link href="/game-test" variant="body2">
+                Unity Game Test
+            </Link>
 
+            <br /><br />
             <Link href="/ar-test" variant="body2">
-                WebGL AR Test
+                AR Test
             </Link>
         </div>
     );

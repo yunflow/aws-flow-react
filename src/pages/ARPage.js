@@ -2,8 +2,8 @@ import UnityViewer from "../components/UnityViewer"
 
 function ARPage() {
     return (
-        <div id="ARPage">
-            <UnityViewer />
+        <div id="ar-page">
+            <UnityViewer folder={"arapp"} project={"arapp"} />
         </div>
     );
 }
