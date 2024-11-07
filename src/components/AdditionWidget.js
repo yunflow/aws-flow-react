@@ -25,7 +25,7 @@ function AdditionWidget(props) {
 
     return (
         <div>
-            <h4>Addition Widget</h4>
+            {/* <h4>Addition Widget</h4> */}
 
             <input
                 type="number"

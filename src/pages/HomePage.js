@@ -6,23 +6,23 @@ function HomePage() {
         <div id="home-page">
             <header>
                 <h3>
-                    Hello, this is Yunflow <br />
-                    还不知道这个网站可以做什么，先放个加法在这里👇
+                    <br />
+                    Hello, this is Zhaojie<br />
+                    个人服务器+Web测试用👇
                 </h3>
+                <br />
             </header>
 
-            <br /><br /><br />
+            <h4>简单加法应用</h4>
             <AdditionWidget />
+            <br />
 
-            <br /><br />
             <Link href="/game-test" variant="body2">
-                Unity Game Test
+                Unity Game Test<br />
             </Link>
+            <br />
 
-            <br /><br />
-            <Link href="/ar-test" variant="body2">
-                AR Test
-            </Link>
+            <a href="/ar-page/ar-page.html" target="_blank">Web AR Test</a>
         </div>
     );
 }
