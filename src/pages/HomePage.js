@@ -22,7 +22,7 @@ function HomePage() {
             </Link>
             <br />
 
-            <a href="/ar-page/ar-page.html" target="_blank">Web AR Test</a>
+            <a href="/ar-page/ar-page.html">Web AR Test</a>
         </div>
     );
 }
