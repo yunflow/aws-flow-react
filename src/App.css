@@ -8,11 +8,11 @@ html {
   background-color: #E4D4C8;
 }
 
-.App {
+.app {
   text-align: center;
 }
 
-#HomePage {
+#home-page {
   /* background-color: #D0B49F; */
   /* Sand Dollar
     #E4D4C8
@@ -22,4 +22,26 @@ html {
     #A47551
     Carafe
     #523A28 */
+}
+
+#unity-container {
+  width: 100%; /* 占满可用宽度 */
+  height: 100vh; /* 占满视口高度 */
+  max-width: 600px; /* 最大宽度，可以根据实际需要调整 */
+  margin: auto; /* 水平居中显示 */
+  position: relative; /* 相对定位 */
+  background-color: black; /* 背景色设置为黑色 */
+}
+
+/* 确保容器保持 9:18 的比例 */
+@media (orientation: portrait) {
+  #unity-container {
+      padding-top: calc(200% / 9); /* 18/9 的比例 */
+  }
+}
+
+@media (orientation: landscape) {
+  #unity-container {
+      padding-top: calc(100% / 18 * 9); /* 保持 9:18 的比例 */
+  }
 }

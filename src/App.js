@@ -5,7 +5,7 @@ import ARPage from "./pages/ARPage"
 
 function App() {
   return (
-    <div className="App">
+    <div className="app">
       <Routes>
         <Route exact path="/" element={<HomePage />} />
         <Route exact path="/ar-test" element={<ARPage />} />

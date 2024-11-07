@@ -10,10 +10,8 @@ const UnityViewer = () => {
     });
 
     return (
-        <div>
-            {!isLoaded && (
-                <p>Loading Application... {Math.round(loadingProgression * 100)}%</p>
-            )}
+        <div id="unity-container">
+            {!isLoaded && <p>Loading... {loadingProgression * 100}%</p>}
             <Unity
                 unityProvider={unityProvider}
                 style={{ width: '100%', height: '100%' }}

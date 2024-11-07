@@ -3,7 +3,7 @@ import { Link } from "@mui/material";
 
 function HomePage() {
     return (
-        <div id="HomePage">
+        <div id="home-page">
             <header>
                 <h3>
                     Hello, this is Yunflow <br />
