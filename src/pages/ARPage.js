@@ -1,9 +1,9 @@
-import WebGLViewer from "../components/WebGLViewer"
+import UnityViewer from "../components/UnityViewer"
 
 function ARPage() {
     return (
         <div id="ARPage">
-            <WebGLViewer />
+            <UnityViewer />
         </div>
     );
 }
