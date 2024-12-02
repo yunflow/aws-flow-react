@@ -14,8 +14,66 @@ const loadGLTF = (path) => {
 }
 
 
+// Function to capture photo
+const takePhoto = () => {
+    const canvas = document.querySelector('canvas');
+    const image = canvas.toDataURL('image/jpg');
+
+    const link = document.createElement('a');
+    link.href = image;
+    link.download = 'ar_photo.png';
+    link.click();
+    console.log("获取了截图");
+};
+
+
+// Function to capture video
+function startRecording() {
+
+}
+
+
 // HTML Page
 document.addEventListener('DOMContentLoaded', () => {
+
+    // 动态创建拍照按钮
+    const photoButton = document.createElement('button');
+    photoButton.innerText = '拍照';
+    photoButton.style.position = 'absolute';
+    photoButton.style.bottom = '20px';
+    photoButton.style.left = '20px';
+    photoButton.style.padding = '10px 20px';
+    photoButton.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    photoButton.style.color = 'white';
+    photoButton.style.border = 'none';
+    photoButton.style.borderRadius = '5px';
+    photoButton.style.cursor = 'pointer';
+    photoButton.style.zIndex = '10';
+    photoButton.style.pointerEvents = 'auto';
+    document.body.appendChild(photoButton);
+
+    // 动态创建录像按钮
+    const recordButton = document.createElement('button');
+    recordButton.innerText = '录像';
+    recordButton.style.position = 'absolute';
+    recordButton.style.bottom = '20px';
+    recordButton.style.right = '20px';
+    recordButton.style.padding = '10px 20px';
+    recordButton.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    recordButton.style.color = 'white';
+    recordButton.style.border = 'none';
+    recordButton.style.borderRadius = '5px';
+    recordButton.style.cursor = 'pointer';
+    recordButton.style.zIndex = '10';
+    recordButton.style.pointerEvents = 'auto';
+    document.body.appendChild(recordButton);
+
+    // 绑定事件监听
+    photoButton.addEventListener('click', takePhoto);
+    recordButton.addEventListener('click', startRecording);
+
+
+    // 启动 AR 功能
     const startAR = async () => {
         // 初始化 MindAR 
         const mindarThree = new MindARThree({
@@ -59,6 +117,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Call AR
+    // 调用 AR
     startAR();
 });
