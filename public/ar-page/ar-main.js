@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { MindARThree } from 'mindar-image-three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-
 // Function to load 3D model and return Promise
 const loadGLTF = (path) => {
     return new Promise((resolve, reject) => {
@@ -13,67 +12,9 @@ const loadGLTF = (path) => {
     });
 }
 
-
-// Function to capture photo
-const takePhoto = () => {
-    const canvas = document.querySelector('canvas');
-    const image = canvas.toDataURL('image/jpg');
-
-    const link = document.createElement('a');
-    link.href = image;
-    link.download = 'ar_photo.png';
-    link.click();
-    console.log("获取了截图");
-};
-
-
-// Function to capture video
-function startRecording() {
-
-}
-
-
 // HTML Page
 document.addEventListener('DOMContentLoaded', () => {
-
-    // 动态创建拍照按钮
-    const photoButton = document.createElement('button');
-    photoButton.innerText = '拍照';
-    photoButton.style.position = 'absolute';
-    photoButton.style.bottom = '20px';
-    photoButton.style.left = '20px';
-    photoButton.style.padding = '10px 20px';
-    photoButton.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-    photoButton.style.color = 'white';
-    photoButton.style.border = 'none';
-    photoButton.style.borderRadius = '5px';
-    photoButton.style.cursor = 'pointer';
-    photoButton.style.zIndex = '10';
-    photoButton.style.pointerEvents = 'auto';
-    document.body.appendChild(photoButton);
-
-    // 动态创建录像按钮
-    const recordButton = document.createElement('button');
-    recordButton.innerText = '录像';
-    recordButton.style.position = 'absolute';
-    recordButton.style.bottom = '20px';
-    recordButton.style.right = '20px';
-    recordButton.style.padding = '10px 20px';
-    recordButton.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-    recordButton.style.color = 'white';
-    recordButton.style.border = 'none';
-    recordButton.style.borderRadius = '5px';
-    recordButton.style.cursor = 'pointer';
-    recordButton.style.zIndex = '10';
-    recordButton.style.pointerEvents = 'auto';
-    document.body.appendChild(recordButton);
-
-    // 绑定事件监听
-    photoButton.addEventListener('click', takePhoto);
-    recordButton.addEventListener('click', startRecording);
-
-
-    // 启动 AR 功能
+    // Function to 启动 AR 功能
     const startAR = async () => {
         // 初始化 MindAR 
         const mindarThree = new MindARThree({
@@ -99,24 +40,106 @@ document.addEventListener('DOMContentLoaded', () => {
         const action = mixer.clipAction(bear.animations[0]);
         action.play();
 
-        const clock = new THREE.Clock();
-
-        // start AR
+        // 启动 mindAR target
         await mindarThree.start();
+
+        // 渲染循环
+        const clock = new THREE.Clock();
         renderer.setAnimationLoop(() => {
             const delta = clock.getDelta();
 
             // 旋转小能
             bear.scene.rotation.set(0, bear.scene.rotation.y + delta, 0);
-
             // 走路小能
             mixer.update(delta);
 
-            // 渲染一帧
+            // 渲染 AR 模型
             renderer.render(scene, camera);
         });
+
+        // 拍照功能
+        const takePhoto = () => {
+            const rendererCanvas = renderer.domElement; // 获取 Three.js 的 Canvas
+            renderer.render(scene, camera); // 手动渲染一帧
+
+            const video = mindarThree.video; // 获取视频流
+
+            // 创建离屏 Canvas
+            const offscreenCanvas = document.createElement('canvas');
+            offscreenCanvas.width = rendererCanvas.width;
+            offscreenCanvas.height = rendererCanvas.height;
+            const offscreenContext = offscreenCanvas.getContext('2d');
+
+            // 绘制视频背景
+            offscreenContext.drawImage(video, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
+
+            // 绘制 AR 模型
+            offscreenContext.drawImage(rendererCanvas, 0, 0);
+
+            // 导出图片
+            // const image = offscreenCanvas.toDataURL('image/png');
+            // const link = document.createElement('a');
+            // link.href = image;
+            // link.download = 'ar_photo.png';
+            // link.click();
+
+            // 将图片显示在页面上
+            const imageDataUrl = offscreenCanvas.toDataURL('image/png');
+            const imgElement = document.createElement('img');
+            imgElement.src = imageDataUrl;
+            imgElement.style = `
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                max-width: 80%;
+                max-height: 80%;
+                object-fit: contain; /* 保持图片宽高比 */
+                border: 2px solid white;
+                z-index: 20;
+            `;
+
+            // 创建遮罩层
+            const overlay = document.createElement('div');
+            overlay.style = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.8);
+                z-index: 15;
+            `;
+
+            // 点击遮罩关闭图片
+            overlay.addEventListener('click', () => {
+                overlay.remove();
+                imgElement.remove();
+            });
+
+            document.body.appendChild(overlay);
+            document.body.appendChild(imgElement);
+        };
+
+        // 创建拍照按钮并绑定事件
+        const photoButton = document.createElement('button');
+        photoButton.innerText = '拍照';
+        photoButton.style = `
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 10;
+            `;
+        document.body.appendChild(photoButton);
+        photoButton.addEventListener('click', takePhoto);
     }
 
-    // 调用 AR
+    // 启动 AR
     startAR();
 });
