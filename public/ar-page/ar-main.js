@@ -3,19 +3,7 @@ import { MindARThree } from 'mindar-image-three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 
-// GLOBAL
-const landmarkColors = {
-    thumb: 'red',
-    index: 'blue',
-    middle: 'yellow',
-    ring: 'green',
-    pinky: 'pink',
-    wrist: 'white'
-}
-const gestureStrings = {
-    'thumbs_up': '👍',
-    'victory': '✌🏻'
-}
+// GLOBAL Test
 async function createDetector() {
     return window.handPoseDetection.createDetector(
         window.handPoseDetection.SupportedModels.MediaPipeHands,
@@ -27,12 +15,9 @@ async function createDetector() {
         }
     );
 }
-
-function drawPoint(ctx, x, y, r, color) {
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, 2 * Math.PI);
-    ctx.fillStyle = color;
-    ctx.fill();
+const gestureStrings = {
+    'thumbs_up': '👍',
+    'victory': '✌🏻'
 }
 
 
@@ -126,6 +111,30 @@ const takePhoto = (mindarThree) => {
 
 
 // HTML Page
+const left = document.createElement('div');
+left.id = 'pose-result-left';
+left.style = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        font-size: 150px;
+        text-align: left;
+        `;
+document.body.appendChild(left);
+
+const right = document.createElement('div');
+right.id = 'pose-result-right';
+right.style = `
+        position: absolute;
+        top: 0;
+        right: 0;
+        font-size: 150px;
+        text-align: right;
+        `;
+document.body.appendChild(right);
+
+
+// HTML Page add AR
 document.addEventListener('DOMContentLoaded', () => {
     const startAR = async () => {
         // 请求2K分辨率的视频流
@@ -150,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
         scene.add(light);
 
         // 加载场景3D模型
-        const bear = await loadGLTF("../assets/BearRigging.glb");
+        const bear = await loadGLTF("../assets/BearRigging2.glb");
         bear.scene.position.set(0, -0.4, 0.2);
 
         // 创建 Target Anchor
@@ -167,58 +176,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 添加模型动画
         const bearMixer = new THREE.AnimationMixer(bear.scene);
-        const bearWalking = bearMixer.clipAction(bear.animations[0]);
-        bearWalking.play();
+        const bearJump = bearMixer.clipAction(bear.animations[0]);
+        const bearWalk = bearMixer.clipAction(bear.animations[1]);
+        bearJump.loop = THREE.LoopOnce;
 
-
-        // Load handpose model
-        // configure gesture estimator
-        // add "✌🏻" and "👍" as sample gestures
-        const knownGestures = [
-            fp.Gestures.VictoryGesture,
-            fp.Gestures.ThumbsUpGesture
-        ]
-        const GE = new fp.GestureEstimator(knownGestures)
-        // load handpose model
+        // 加载 GE 配置手势形状
+        const GE = new fp.GestureEstimator([
+            fp.Gestures.VictoryGesture, // ✌🏻
+            fp.Gestures.ThumbsUpGesture // 👍
+        ]);
         const detector = await createDetector();
 
-
-        // 启动 MindAR 场景 and 渲染循环 Update
+        // 启动 MindAR 场景 并且 渲染循环 Update
         const clock = new THREE.Clock();
         await mindarThree.start();
         renderer.setAnimationLoop(() => {
             const delta = clock.getDelta();
-
-            bear.scene.rotation.set(0, bear.scene.rotation.y + delta, 0);
+            // bear.scene.rotation.set(0, bear.scene.rotation.y + delta, 0);
             bearMixer.update(delta); // 动画更新
-
             renderer.render(scene, camera); // 渲染 AR 当前帧
         });
 
-        // main estimation loop
+        // 小能动画控制
+        let activeAction = bearWalk;
+        activeAction.play();
+        const fadeToAction = (action, duration) => {
+            if (activeAction === action) return;
+            activeAction = action;
+            activeAction.reset().fadeIn(duration).play();
+        }
+        bearMixer.addEventListener('finished', () => {
+            fadeToAction(bearWalk, 0.1);
+        });
+
+        // 手势检测循环
         const video = mindarThree.video;
-        const resultLayer = {
+        const testLayer = {
             left: document.querySelector("#pose-result-left"),
             right: document.querySelector("#pose-result-right"),
         }
-
         const estimateHands = async () => {
-            resultLayer.left.innerText = '';
-            resultLayer.right.innerText = '';
+            // 每次清空测试层
+            testLayer.left.innerText = '';
+            testLayer.right.innerText = '';
 
-            // get hand landmarks from video
+            // 从 video 中得到检测的手
             const hands = await detector.estimateHands(video, {
                 flipHorizontal: true
-            })
-
+            });
             for (const hand of hands) {
-                for (const keypoint of hand.keypoints) {
-                    const name = keypoint.name.split('_')[0].toString().toLowerCase();
-                    const color = landmarkColors[name];
-                    // drawPoint(ctx, keypoint.x, keypoint.y, 3, color)
-                }
-
-                const est = GE.estimate(hand.keypoints3D, 9);
+                const est = GE.estimate(hand.keypoints3D, 9.8);
                 if (est.gestures.length > 0) {
                     // find gesture with highest match score
                     let result = est.gestures.reduce((p, c) => {
@@ -226,14 +233,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
 
                     if (result.name === 'thumbs_up') {
-                        bearWalking.stop();
-                    } else {
-                        bearWalking.play();
+                        fadeToAction(bearWalk, 0.1);
+                        console.log("thumbs_up");
+                    } else if (result.name === 'victory') {
+                        fadeToAction(bearJump, 0.1);
+                        console.log("victory");
                     }
 
                     const chosenHand = hand.handedness.toLowerCase();
-                    resultLayer[chosenHand].innerText = gestureStrings[result.name];
-                    console.log("左右？" + chosenHand + ", " + result.name);
+                    testLayer[chosenHand].innerText = gestureStrings[result.name];
                 }
             }
             window.requestAnimationFrame(estimateHands);
