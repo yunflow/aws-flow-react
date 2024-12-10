@@ -17,7 +17,8 @@ async function createDetector() {
 }
 const gestureStrings = {
     'thumbs_up': '👍',
-    'victory': '✌🏻'
+    'victory': '✌🏻',
+    'middle_up': '🖕',
 }
 
 
@@ -137,7 +138,7 @@ document.body.appendChild(right);
 // HTML Page add AR
 document.addEventListener('DOMContentLoaded', () => {
     const startAR = async () => {
-        // 请求2K分辨率的视频流
+        // 请求 2K 分辨率的视频流
         const constraints = {
             video: {
                 width: { ideal: 2160 },
@@ -158,13 +159,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
         scene.add(light);
 
-        // 加载场景3D模型
+        // 加载场景 3D 模型
         const bear = await loadGLTF("../assets/BearRigging2.glb");
         bear.scene.position.set(0, -0.4, 0.2);
 
         // 创建 Target Anchor
         const bearAnchor = mindarThree.addAnchor(0); // MindAR里面的第一张图
         bearAnchor.group.add(bear.scene);
+
+        const imagePlane = addNinJiXiang();
+        imagePlane.position.set(0, 0.9, 0.5);
+        bearAnchor.group.add(imagePlane);
 
         // Target Callbacks
         bearAnchor.onTargetFound = () => {
@@ -181,9 +186,22 @@ document.addEventListener('DOMContentLoaded', () => {
         bearJump.loop = THREE.LoopOnce;
 
         // 加载 GE 配置手势形状
+        const middleUpGesture = new fp.GestureDescription('middle_up');
+        middleUpGesture.addCurl(fp.Finger.Middle, fp.FingerCurl.NoCurl, 1.0);
+        middleUpGesture.addDirection(fp.Finger.Middle, fp.FingerDirection.VerticalUp, 1.0);
+        middleUpGesture.addDirection(fp.Finger.Middle, fp.FingerDirection.DiagonalUpLeft, 1.0);
+        middleUpGesture.addDirection(fp.Finger.Middle, fp.FingerDirection.DiagonalUpRight, 1.0);
+        middleUpGesture.addDirection(fp.Finger.Middle, fp.FingerDirection.HorizontalLeft, 1.0);
+        middleUpGesture.addDirection(fp.Finger.Middle, fp.FingerDirection.HorizontalRight, 1.0);
+        for (let finger of [fp.Finger.Index, fp.Finger.Ring, fp.Finger.Pinky]) {
+            middleUpGesture.addCurl(finger, fp.FingerCurl.FullCurl, 1.0);
+            middleUpGesture.addCurl(finger, fp.FingerCurl.HalfCurl, 0.9);
+        }
+
         const GE = new fp.GestureEstimator([
             fp.Gestures.VictoryGesture, // ✌🏻
-            fp.Gestures.ThumbsUpGesture // 👍
+            fp.Gestures.ThumbsUpGesture, // 👍
+            middleUpGesture, // 🖕
         ]);
         const detector = await createDetector();
 
@@ -225,7 +243,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 flipHorizontal: true
             });
             for (const hand of hands) {
-                const est = GE.estimate(hand.keypoints3D, 9.8);
+                console.log(hand)
+                const est = GE.estimate(hand.keypoints3D, 9.0);
                 if (est.gestures.length > 0) {
                     // find gesture with highest match score
                     let result = est.gestures.reduce((p, c) => {
@@ -234,10 +253,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (result.name === 'thumbs_up') {
                         fadeToAction(bearWalk, 0.1);
+                        imagePlane.visible = false;
                         console.log("thumbs_up");
                     } else if (result.name === 'victory') {
                         fadeToAction(bearJump, 0.1);
+                        imagePlane.visible = false;;
                         console.log("victory");
+                    } else if (result.name === 'middle_up') {
+                        imagePlane.visible = true;
                     }
 
                     const chosenHand = hand.handedness.toLowerCase();
@@ -273,3 +296,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // 最终启动 AR
     startAR();
 });
+
+
+function addNinJiXiang() {
+    const geometry = new THREE.PlaneGeometry(1, 1);
+    const texture = new THREE.TextureLoader().load('../assets/ninjixiang.png');
+    const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+
+    const plane = new THREE.Mesh(geometry, material);
+    plane.visible = false;
+    return plane;
+}
