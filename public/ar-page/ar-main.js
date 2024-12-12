@@ -3,7 +3,17 @@ import { MindARThree } from 'mindar-image-three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 
-// GLOBAL Test
+// GLOBAL 手势
+let isCubeAdded = false;
+
+const gestureStrings = {
+    'thumbs_up': '👍',
+    'victory': '✌🏻',
+    'middle_up': '🖕',
+}
+
+
+// Function to create gesture detector
 async function createDetector() {
     return window.handPoseDetection.createDetector(
         window.handPoseDetection.SupportedModels.MediaPipeHands,
@@ -15,11 +25,6 @@ async function createDetector() {
         }
     );
 }
-const gestureStrings = {
-    'thumbs_up': '👍',
-    'victory': '✌🏻',
-    'middle_up': '🖕',
-}
 
 
 // Function to load a 3D model and return a Promise
@@ -30,6 +35,26 @@ const loadGLTF = (path) => {
             resolve(gltf);
         });
     });
+}
+const loadAudio = (path) => {
+    return new Promise((resolve, reject) => {
+        const loader = new THREE.AudioLoader();
+        loader.load(path, (buffer) => {
+            resolve(buffer);
+        });
+    });
+}
+
+
+// Function to load a picture plane, default invisible
+function loadPicturePlane(path) {
+    const geometry = new THREE.PlaneGeometry(1, 1);
+    const texture = new THREE.TextureLoader().load(path);
+    const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+
+    const plane = new THREE.Mesh(geometry, material);
+    plane.visible = false;
+    return plane;
 }
 
 
@@ -111,28 +136,27 @@ const takePhoto = (mindarThree) => {
 };
 
 
-// HTML Page
-const left = document.createElement('div');
-left.id = 'pose-result-left';
-left.style = `
+// HTML Page Test
+const leftDiv = document.createElement('div');
+const rightDiv = document.createElement('div');
+leftDiv.id = 'pose-result-left';
+rightDiv.id = 'pose-result-right';
+leftDiv.style = `
         position: absolute;
         top: 0;
         left: 0;
         font-size: 150px;
         text-align: left;
         `;
-document.body.appendChild(left);
-
-const right = document.createElement('div');
-right.id = 'pose-result-right';
-right.style = `
+rightDiv.style = `
         position: absolute;
         top: 0;
         right: 0;
         font-size: 150px;
         text-align: right;
         `;
-document.body.appendChild(right);
+document.body.appendChild(leftDiv);
+document.body.appendChild(rightDiv);
 
 
 // HTML Page add AR
@@ -159,31 +183,88 @@ document.addEventListener('DOMContentLoaded', () => {
         const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
         scene.add(light);
 
-        // 加载场景 3D 模型
+        // 添加 Listener 和 Audio
+        const listener = new THREE.AudioListener();
+        camera.add(listener);
+        const sound = new THREE.Audio(listener);
+        const audio = await loadAudio('../assets/littleTown.ogg');
+        sound.setBuffer(audio);
+
+        // 加载场景模型
         const bear = await loadGLTF("../assets/BearRigging2.glb");
         bear.scene.position.set(0, -0.4, 0.2);
 
-        // 创建 Target Anchor
-        const bearAnchor = mindarThree.addAnchor(0); // MindAR里面的第一张图
-        bearAnchor.group.add(bear.scene);
+        const imagePlane = loadPicturePlane('../assets/ninjixiang.png');
+        imagePlane.scale.set(4, 4, 4);
+        imagePlane.position.set(0, 0, -18);
+        imagePlane.rotation.x = 0.3;
+        scene.add(imagePlane);
 
-        const imagePlane = addNinJiXiang();
-        imagePlane.position.set(0, 0.9, 0.5);
-        bearAnchor.group.add(imagePlane);
-
-        // Target Callbacks
-        bearAnchor.onTargetFound = () => {
-            console.log("发现小能");
-        }
-        bearAnchor.onTargetLost = () => {
-            console.log("失去小能");
-        }
+        // 旋转方块
+        const geometry = new THREE.BoxGeometry(1, 1, 1);
+        const texture = new THREE.TextureLoader().load('../assets/ninjixiang.png');
+        const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+        const cube = new THREE.Mesh(geometry, material);
 
         // 添加模型动画
         const bearMixer = new THREE.AnimationMixer(bear.scene);
         const bearJump = bearMixer.clipAction(bear.animations[0]);
         const bearWalk = bearMixer.clipAction(bear.animations[1]);
         bearJump.loop = THREE.LoopOnce;
+
+        // 创建 Target Anchor
+        const arAnchor = mindarThree.addAnchor(0); // MindAR里面的第一张图
+        // arAnchor.group.add(bear.scene);
+        // arAnchor.group.add(imagePlane);
+
+        // Anchor Callbacks
+        arAnchor.onTargetFound = () => {
+            console.log("发现Target");
+
+            if (isCubeAdded) return;
+            isCubeAdded = true;
+            scene.add(cube);
+            cube.scale.set(4, 4, 4);
+            cube.position.set(0, 0, -20);
+            cube.rotation.x = 0.3;
+            cube.userData.clickable = true
+
+            const asisn = document.getElementsByClassName('mindar-ui-overlay mindar-ui-scanning');
+            document.body.removeChild(asisn[0]);
+        }
+        arAnchor.onTargetLost = () => {
+            console.log("失去Target");
+        }
+
+        document.body.addEventListener('click', (e) => {
+            // normalize to -1 to 1
+            const mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+            const mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+            const mouse = new THREE.Vector2(mouseX, mouseY);
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(scene.children, true);
+
+            if (intersects.length > 0) {
+                let o = intersects[0].object;
+                while (o.parent && !o.userData.clickable) {
+                    o = o.parent;
+                }
+                if (o.userData.clickable) {
+                    console.log(o);
+                    if (o === cube) {
+                        sound.play();
+                        scene.remove(cube);
+                        scene.add(bear.scene);
+                        bear.scene.scale.set(5, 5, 5);
+                        bear.scene.position.set(0, -2, -20);
+                        bear.scene.rotation.x = 0.5;
+                        bear.scene.rotation.y = -0.2;
+                        bear.scene.userData.clickable = true
+                    }
+                }
+            }
+        });
 
         // 加载 GE 配置手势形状
         const middleUpGesture = new fp.GestureDescription('middle_up');
@@ -208,9 +289,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // 启动 MindAR 场景 并且 渲染循环 Update
         const clock = new THREE.Clock();
         await mindarThree.start();
+        renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setAnimationLoop(() => {
             const delta = clock.getDelta();
-            // bear.scene.rotation.set(0, bear.scene.rotation.y + delta, 0);
+
+            cube.rotation.y = cube.rotation.y + delta;
+            bear.scene.rotation.y = bear.scene.rotation.y + delta;
+
             bearMixer.update(delta); // 动画更新
             renderer.render(scene, camera); // 渲染 AR 当前帧
         });
@@ -243,28 +328,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 flipHorizontal: true
             });
             for (const hand of hands) {
-                console.log(hand)
-                const est = GE.estimate(hand.keypoints3D, 9.0);
+                // console.log(hand)
+                const est = GE.estimate(hand.keypoints3D, 8.5);
                 if (est.gestures.length > 0) {
                     // find gesture with highest match score
                     let result = est.gestures.reduce((p, c) => {
                         return (p.score > c.score) ? p : c
                     });
 
+                    console.log(result.name);
+
                     if (result.name === 'thumbs_up') {
                         fadeToAction(bearWalk, 0.1);
                         imagePlane.visible = false;
-                        console.log("thumbs_up");
                     } else if (result.name === 'victory') {
                         fadeToAction(bearJump, 0.1);
                         imagePlane.visible = false;;
-                        console.log("victory");
                     } else if (result.name === 'middle_up') {
                         imagePlane.visible = true;
                     }
 
                     const chosenHand = hand.handedness.toLowerCase();
-                    testLayer[chosenHand].innerText = gestureStrings[result.name];
+                    // testLayer[chosenHand].innerText = gestureStrings[result.name];
                 }
             }
             window.requestAnimationFrame(estimateHands);
@@ -296,14 +381,3 @@ document.addEventListener('DOMContentLoaded', () => {
     // 最终启动 AR
     startAR();
 });
-
-
-function addNinJiXiang() {
-    const geometry = new THREE.PlaneGeometry(1, 1);
-    const texture = new THREE.TextureLoader().load('../assets/ninjixiang.png');
-    const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
-
-    const plane = new THREE.Mesh(geometry, material);
-    plane.visible = false;
-    return plane;
-}
