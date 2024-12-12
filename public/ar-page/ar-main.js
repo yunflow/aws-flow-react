@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const listener = new THREE.AudioListener();
         camera.add(listener);
         const sound = new THREE.Audio(listener);
-        const audio = await loadAudio('../assets/littleTown.ogg');
+        const audio = await loadAudio('../assets/littleTown.mp3'); // 苹果不支持ogg
         sound.setBuffer(audio);
 
         // 加载场景模型
