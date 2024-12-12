@@ -205,6 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const texture = new THREE.TextureLoader().load('../assets/ninjixiang.png');
         const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
         const cube = new THREE.Mesh(geometry, material);
+        const other3D = await loadGLTF("../assets/gift.glb");
 
         // 添加模型动画
         const bearMixer = new THREE.AnimationMixer(bear.scene);
@@ -223,11 +224,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (isCubeAdded) return;
             isCubeAdded = true;
-            scene.add(cube);
-            cube.scale.set(4, 4, 4);
-            cube.position.set(0, 0, -20);
-            cube.rotation.x = 0.3;
-            cube.userData.clickable = true
+
+            scene.add(other3D.scene);
+            other3D.scene.scale.set(1, 1, 1);
+            other3D.scene.position.set(0, -2, -20);
+            other3D.scene.rotation.x = 0.3;
+            other3D.scene.userData.clickable = true
+
+            // scene.add(cube);
+            // cube.scale.set(4, 4, 4);
+            // cube.position.set(0, 0, -20);
+            // cube.rotation.x = 0.3;
+            // cube.userData.clickable = true
 
             const asisn = document.getElementsByClassName('mindar-ui-overlay mindar-ui-scanning');
             document.body.removeChild(asisn[0]);
@@ -252,15 +260,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 if (o.userData.clickable) {
                     console.log(o);
-                    if (o === cube) {
+                    if (o === other3D.scene) {
                         sound.play();
-                        scene.remove(cube);
+                        scene.remove(other3D.scene);
                         scene.add(bear.scene);
                         bear.scene.scale.set(5, 5, 5);
                         bear.scene.position.set(0, -2, -20);
                         bear.scene.rotation.x = 0.5;
                         bear.scene.rotation.y = -0.2;
-                        bear.scene.userData.clickable = true
+                        bear.scene.userData.clickable = true;
                     }
                 }
             }
@@ -293,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderer.setAnimationLoop(() => {
             const delta = clock.getDelta();
 
-            cube.rotation.y = cube.rotation.y + delta;
+            other3D.scene.rotation.y = other3D.scene.rotation.y + delta;
             bear.scene.rotation.y = bear.scene.rotation.y + delta;
 
             bearMixer.update(delta); // 动画更新
