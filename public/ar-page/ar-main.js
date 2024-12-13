@@ -180,8 +180,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const { renderer, scene, camera } = mindarThree;
 
         // 添加场景环境光
+        const direLight = new THREE.DirectionalLight(0xffffff, 2);
+        direLight.position.set(5, 5, 5);
         const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
         scene.add(light);
+        scene.add(direLight);
 
         // 添加 Listener 和 Audio
         const listener = new THREE.AudioListener();
