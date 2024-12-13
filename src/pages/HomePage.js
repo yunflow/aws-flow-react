@@ -23,6 +23,8 @@ function HomePage() {
             <br />
 
             <a href="/ar-page/ar-page.html">Web AR Test</a>
+            <br /><br />
+            <a href="/chris-page/chris-page.html">Christmas AR Test</a>
         </div>
     );
 }

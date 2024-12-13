@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const mindarThree = new MindARThree({
             container: document.body,
             videoStream: stream,
-            imageTargetSrc: './targets.mind',
+            imageTargetSrc: '../assets/targets.mind',
         });
         const { renderer, scene, camera } = mindarThree;
 
@@ -195,6 +195,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 加载场景模型
         const bear = await loadGLTF("../assets/BearRigging2.glb");
+        bear.scene.position.set(0, -0.4, 0.2);
+
+        const chris = await loadGLTF("../assets/ChristmasAR.glb");
         bear.scene.position.set(0, -0.4, 0.2);
 
         const imagePlane = loadPicturePlane('../assets/ninjixiang.png');
@@ -266,12 +269,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (o === other3D.scene) {
                         sound.play();
                         scene.remove(other3D.scene);
-                        scene.add(bear.scene);
-                        bear.scene.scale.set(5, 5, 5);
-                        bear.scene.position.set(0, -2, -20);
-                        bear.scene.rotation.x = 0.5;
-                        bear.scene.rotation.y = -0.2;
-                        bear.scene.userData.clickable = true;
+                        // scene.add(bear.scene);
+                        // bear.scene.scale.set(5, 5, 5);
+                        // bear.scene.position.set(0, -2, -20);
+                        // bear.scene.rotation.x = 0.5;
+                        // bear.scene.rotation.y = -0.2;
+                        // bear.scene.userData.clickable = true;
+
+                        scene.add(chris.scene);
+                        chris.scene.scale.set(1.2, 1.2, 1.2);
+                        chris.scene.position.set(2, -2, -20);
+                        chris.scene.userData.clickable = true;
                     }
                 }
             }
