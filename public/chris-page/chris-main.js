@@ -64,7 +64,12 @@ const loadAudioClip = (path) => {
  */
 function loadPicturePlane(path) {
     const geometry = new THREE.PlaneGeometry(1, 1);
-    const texture = new THREE.TextureLoader().load(path);
+    const texture = new THREE.TextureLoader().load(path, (texture) => {
+        // 根据图片的宽高调整平面比例
+        const imageAspect = texture.image.width / texture.image.height;
+        geometry.scale(imageAspect, 1, 1); // 只调整宽度，保持高度为 1
+    })
+
     const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
 
     const plane = new THREE.Mesh(geometry, material);
@@ -216,30 +221,23 @@ document.addEventListener('DOMContentLoaded', () => {
         camera.add(listener);
 
         const audioPlayer1 = new THREE.Audio(listener);
-        const bgClip = await loadAudioClip('../assets/littleTown.mp3'); // 苹果不支持ogg
+        const bgClip = await loadAudioClip('../assets/christmas-upbeat.mp3'); // 苹果不支持ogg
         const clickClip = await loadAudioClip('../assets/switch38.mp3');
 
         // 加载场景模型
-        const christmasGround = await loadGLTF("../assets/CristmasSceneTest1.glb");
+        const christmasGround = await loadGLTF("../assets/ARCardBearAnimation.glb");
         console.log(christmasGround);
         const giftBox = await loadGLTF("../assets/gift.glb");
 
         const chrisMixer = new THREE.AnimationMixer(christmasGround.scene);
-        const chrisIdle = chrisMixer.clipAction(christmasGround.animations[8]);
+        const chrisIdle = chrisMixer.clipAction(christmasGround.animations[0]);
         chrisIdle.play();
 
         // 加载🤘图片
-        const rockPlane = loadPicturePlane('../assets/rock_picture.PNG');
+        const rockPlane = loadPicturePlane('../assets/rock_card.JPG');
         rockPlane.scale.set(7, 7, 7);
-        rockPlane.position.set(-1, 2, -8);
-        rockPlane.rotation.x = 0.3;
+        rockPlane.position.set(0, 6, -22);
         scene.add(rockPlane);
-
-        // 添加小能Bear模型动画
-        const bear = await loadGLTF("../assets/BearRigging2.glb");
-        const bearMixer = new THREE.AnimationMixer(bear.scene);
-        const bearJump = bearMixer.clipAction(bear.animations[0]);
-        bearJump.loop = THREE.LoopOnce;
 
         // 创建粒子系统（雪花）
         const particleCount = 1000;
@@ -406,8 +404,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             // 金光动画完成后切换模型
                             scene.remove(giftBox.scene);
                             scene.add(christmasGround.scene);
-                            christmasGround.scene.scale.set(1.2, 1.2, 1.2);
-                            christmasGround.scene.position.set(2, -3, -10);
+                            christmasGround.scene.scale.set(1, 1, 1);
+                            christmasGround.scene.position.set(1.8, -3, -15);
                             christmasGround.scene.rotation.set(0, -0.5, 0);
                             christmasGround.scene.userData.clickable = true;
 
